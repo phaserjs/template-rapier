@@ -1,14 +1,14 @@
 # Phaser Rapier Template
 
-This is a Phaser 3 project template that uses Vite for bundling and Rapier physics. It supports hot-reloading for quick development workflow and includes scripts to generate production-ready builds.
+This is a Phaser 3 project template that shows how to use Rapier physics for managing a full-body physics world. It also uses Vite for bundling and supports hot-reloading for quick development workflow and includes scripts to generate production-ready builds.
 
 ### Versions
 
 This template has been updated for:
 
 - [Phaser 3.80.1](https://github.com/phaserjs/phaser)
-- [Vite 5.2.11](https://github.com/vitejs/vite)
 - [Rapier 0.14.0](https://github.com/dimforge/rapier)
+- [Vite 5.2.11](https://github.com/vitejs/vite)
 
 ![screenshot](screenshot.png)
 
@@ -43,69 +43,169 @@ We have provided a default project structure to get you started. This is as foll
 - `public/style.css` - Some simple CSS rules to help with page layout.
 - `public/assets` - Contains the static assets used by the game.
 
-## Handling Assets
+## Source Code Examples
 
-Vite supports loading assets via JavaScript module `import` statements.
+You can find 15 different code examples of how to use Rapier with Phaser in this [Rapier Phaser Sandbox](https://phaser.io/sandbox/full/ZhbGYVBa)
 
-This template provides support for both embedding assets and also loading them from a static folder. To embed an asset, you can import it at the top of the JavaScript file you are using it in:
+[![Example Image](examples.png)](https://phaser.io/sandbox/full/ZhbGYVBa)
 
-```js
-import logoImg from './assets/logo.png'
-```
+## Using Rapier Physics in Phaser
 
-To load static files such as audio files, videos, etc place them into the `public/assets` folder. Then you can use this path in the Loader calls within Phaser:
+This template includes the integration of the Rapier physics system in Phaser. Below are the steps necessary to initialize Rapier and get the physics system working in your project.
 
-```js
-preload ()
-{
-    //  This is an example of an imported bundled image.
-    //  Remember to import it at the top of this file
-    this.load.image('logo', logoImg);
+### Configuring Rapier in the Phaser Scene
 
-    //  This is an example of loading a static image
-    //  from the public/assets folder:
-    this.load.image('background', 'assets/bg.png');
-}
-```
-
-When you issue the `npm run build` command, all static assets are automatically copied to the `dist/assets` folder.
-
-## Using Rapier Physics in PhaserJS
-
-This template includes the integration of the Rapier physics system in PhaserJS. Below are the steps necessary to initialize Rapier and get the physics system working in your project.
-
-### Configuring Rapier in the Scene
-In your main scene file, import Rapier. Then, initialize Rapier and set up the physics world in the create method.
-
-### Overview
-
-We begin by importing the `@dimforge/rapier2d-compat` package, which provides compatibility with Rapier's 2D physics system. After initializing the Rapier physics engine, a physics world is created with gravity, and game objects are linked to rigid bodies and colliders to enable realistic physical interactions.
-
-In the `create` method, a game object (an image) is added to the scene, and a corresponding dynamic rigid body and cuboid collider are created for it. User data is used to associate the game object with the rigid body, allowing synchronization of its position and rotation based on physics calculations.
-
-The `update` method steps the physics simulation on each frame, updating the game objects' positions and rotations to reflect the physics world's current state. This setup ensures that game objects behave according to the laws of physics, such as gravity and collision response, providing a more immersive and interactive gameplay experience.
-
-Below is the complete code to set up and use Rapier physics in your PhaserJS project:
+In your main Phaser Scene file you need to import the Rapier library.
 
 ```js
 import RAPIER from '@dimforge/rapier2d-compat';
 
-export class Game extends Scene
-{
-    ...
+class Game extends Phaser.Scene {}
+```
 
+Then initialize Rapier and configure the physics world in the `create` method:
+
+```js
+import RAPIER from '@dimforge/rapier2d-compat';
+
+export class Game extends Phaser.Scene
+{
+    async create ()
+    {
+        // Initialization: Initialize Rapier with await RAPIER.init().
+        // Then, create a new Rapier world with gravity set to 9.81:
+        await RAPIER.init();
+
+        this.rapierWorld = new RAPIER.World(new RAPIER.Vector2(0.0, 9.81));
+    }
+}
+```
+
+It's import to mark this method as `async` because the `RAPIER.init()` call returns a Promise and runs in async. It doesn't return immediately. For this reason, we `await` it in our code above, but you can handle the promise however you like. See the Rapier documentation for further details.
+
+### Overview
+
+Once the Rapier World has been created we can make bodies and colliders, and assign these to Phaser Game Objects to enable realistic physical interactions.
+
+In the following `create` method, a Phaser Image Game Object is added to the Scene, and a corresponding dynamic rigid body and cuboid collider are created for it:
+
+```js
+// Create a Phaser game object (an image) and set its position.
+const player = this.add.image(400, 300, 'player');
+
+// Create a Rapier dynamic rigid body
+const bodyDesc = RAPIER.RigidBodyDesc.dynamic();
+
+// Set its initial position to match our Phaser Game Object
+bodyDesc.setTranslation(player.x, player.y);
+
+// Store the Phaser Game Object in the rigid body's user data so we can sync its position and rotation
+bodyDesc.setUserData(player);
+
+// Finally, create the rigid body in the Rapier world from the body description
+const rigidBody = this.rapierWorld.createRigidBody(bodyDesc);
+```
+
+We store a reference to the Phaser Game Object in the Body Description User data. This allows us to easily get back to the Game Object later on, such as during update, or collisions, to sync the two objects together. You can of course come up with your own way of linking the Game Object and body but this is the one we use in this template due to its simplicity.
+
+We'll now update the two objects during the update loop.
+
+`update` is a special Phaser Scene method that is called automatically every frame by Phaser. During it, we will step the physics simulation:
+
+```js
+    update ()
+    {
+        // Check if the Rapier world is initialized or not
+        if (!this.rapierWorld)
+        {
+            return;
+        }
+
+        // Step the physics simulation.
+        this.rapierWorld.step();
+    }
+```
+
+After the World step, we can integrate the body position back to the Phaser Game Object. If you have a reference to the Rigid Body and Game Object, it can be done like this:
+
+```js
+    update ()
+    {
+        // Check if the Rapier world is initialized or not
+        if (!this.rapierWorld)
+        {
+            return;
+        }
+
+        // Step the physics simulation.
+        this.rapierWorld.step();
+
+        //  Assuming 'rigidBody' is a Rapier Rigid Body:
+
+        const position = this.rigidBody.translation();
+        const rotation = this.rigidBody.rotation();
+
+        //  Assuming 'player' is a Phaser Sprite, Image, or similar Game Object:
+
+        this.player.setPosition(position.x, position.y);
+        this.player.setRotation(rotation);
+    }
+```
+
+Alternatively, you can use the Rigid Body User Data and sync all of the bodies with Game Objects in a single loop:
+
+```js
+    update ()
+    {
+        // Check if the Rapier world is initialized or not
+        if (!this.rapierWorld)
+        {
+            return;
+        }
+
+        // Step the physics simulation.
+        this.rapierWorld.step();
+
+        this.rapierWorld.bodies.forEach((rigidBody) => {
+   
+            const gameObject = rigidBody.userData;
+
+            if (gameObject)
+            {
+                const position = rigidBody.translation();
+                const rotation = rigidBody.rotation();
+                gameObject.setPosition(position.x, position.y);
+                gameObject.setRotation(angle);
+            }
+        });
+    }
+```
+
+This works by extracting the Game Object from the User Data and, if it exists, setting the translations upon it.
+
+Both methods will allow Game Objects to reflect the physic worlds current state, ensuring that the Game Objects behave according to the laws of physics, such as gravity and collision responses.
+
+Below is a complete code example showing all of these steps:
+
+```js
+import RAPIER from '@dimforge/rapier2d-compat';
+
+export class Game extends Phaser.Scene
+{
     async create ()
     {
         // Initialization: Initialize Rapier with await RAPIER.init(). Then, create a new Rapier world with gravity set to 9.81.
         await RAPIER.init();
+
         this.rapierWorld = new RAPIER.World(new RAPIER.Vector2(0.0, 9.81));
 
         // Create a Phaser game object (an image) and set its position.
         const logo = this.add.image(512, 100, 'logo');
 
         // Create a Rapier dynamic rigid body and set its initial position.
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-            .setTranslation(logo.x, logo.y);
+        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
+            
+        rigidBodyDesc.setTranslation(logo.x, logo.y);
 
         // Store the Phaser game object in the rigid body's user data to sync its position and rotation.
         rigidBodyDesc.setUserData(logo);
@@ -146,7 +246,36 @@ export class Game extends Scene
 }
 ```
 
-If you follow these steps, you should be able to integrate Rapier physics into your PhaserJS project successfully. By setting up the physics world, creating rigid bodies and colliders, and updating game objects based on physics calculations, you can create interactive games with realistic physical interactions. More information on Rapier can be found in the [Rapier documentation](https://rapier.rs/docs/).
+If you follow these steps, you should be able to integrate Rapier physics into your Phaser project successfully. By setting up the physics world, creating rigid bodies and colliders, and updating game objects based on physics calculations, you can create interactive games with realistic physical interactions.
+
+More information on Rapier and the functions it has available can be found in the [Rapier documentation](https://rapier.rs/docs/).
+
+## Handling Assets
+
+Vite, used for bundling in this template, supports loading assets via JavaScript module `import` statements.
+
+This template provides support for both embedding assets and also loading them from a static folder. To embed an asset, you can import it at the top of the JavaScript file you are using it in:
+
+```js
+import logoImg from './assets/logo.png'
+```
+
+To load static files such as audio files, videos, etc place them into the `public/assets` folder. Then you can use this path in the Loader calls within Phaser:
+
+```js
+preload ()
+{
+    //  This is an example of an imported bundled image.
+    //  Remember to import it at the top of this file
+    this.load.image('logo', logoImg);
+
+    //  This is an example of loading a static image
+    //  from the public/assets folder:
+    this.load.image('background', 'assets/bg.png');
+}
+```
+
+When you issue the `npm run build` command, all static assets are automatically copied to the `dist/assets` folder.
 
 ## Deploying to Production
 
