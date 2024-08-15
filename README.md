@@ -2,6 +2,8 @@
 
 This is a Phaser 3 project template that shows how to use Rapier physics for managing a full-body physics world. It also uses Vite for bundling and supports hot-reloading for quick development workflow and includes scripts to generate production-ready builds.
 
+Please also see the Rapier Connector Template. This offers a Phaser plugin that handles the most common Rapier functions for you: [Rapier Connector repository](https://github.com/phaserjs/rapier-connector).
+
 ### Versions
 
 This template has been updated for:
