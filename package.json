@@ -26,6 +26,6 @@
     },
     "dependencies": {
         "@dimforge/rapier2d-compat": "^0.14.0",
-        "phaser": "^3.86.0"
+        "phaser": "^3.87.0"
     }
 }

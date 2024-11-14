@@ -8,7 +8,7 @@ Please also see the Rapier Connector Template. This offers a Phaser plugin that 
 
 This template has been updated for:
 
-- [Phaser 3.85.0](https://github.com/phaserjs/phaser)
+- [Phaser 3.87.0](https://github.com/phaserjs/phaser)
 - [Rapier 0.14.0](https://github.com/dimforge/rapier)
 - [Vite 5.2.11](https://github.com/vitejs/vite)
 
