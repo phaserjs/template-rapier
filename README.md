@@ -10,7 +10,7 @@ This template has been updated for:
 
 - [Phaser 3.88.0](https://github.com/phaserjs/phaser)
 - [Rapier 0.14.0](https://github.com/dimforge/rapier)
-- [Vite 5.2.11](https://github.com/vitejs/vite)
+- [Vite 6.3.1](https://github.com/vitejs/vite)
 
 ![screenshot](screenshot.png)
 
