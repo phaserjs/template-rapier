@@ -1,7 +1,7 @@
 {
     "name": "template-rapier",
     "description": "A Phaser 3 template using Rapier physics.",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "type": "module",
     "repository": {
         "type": "git",
@@ -21,8 +21,8 @@
         "build-nolog": "vite build --config vite/config.prod.mjs"
     },
     "devDependencies": {
-        "terser": "^5.31.0",
-        "vite": "^5.3.1"
+        "terser": "^5.39.0",
+        "vite": "^6.3.1"
     },
     "dependencies": {
         "@dimforge/rapier2d-compat": "^0.14.0",
